@@ -1,7 +1,7 @@
-LDA-C
+Latent Dirichlet Allocation
 =====
 
-This is a fork of the LDA-C code by D. Blei
+This is a fork of the LDA-C code by D. Blei, and then from https://github.com/neopunisher/LDA-C.
 
 ***************************
 LATENT DIRICHLET ALLOCATION
