@@ -31,3 +31,4 @@ lda:	$(LOBJECTS)
 
 clean:
 	-rm -f *.o
+	-rm lda

@@ -22,6 +22,20 @@
 /*
  * variational inference
  *
+ * See also: http://metaoptimize.com/qa/questions/1842/about-the-original-variational-lda-algorithm
+ *
+ * The algorithm:
+ *
+ * - initialize phi_{ni}^0 = 1/k for all i and n. ## Here "k" is used instead of "i" and "1/k" is 1/model->num_topics
+ * - initialize \gamma_i = \alpha_i + N/k for all i. ## Here "k" is used instead of "i", \alpha_i is model->alpha and 
+ *    thus the same for all topics, "N" is doc->total, and "k" is model->num_topics.
+ * - repeat
+ * -   for n = 1 to N
+ * -     for i = 1 to k. ## Again "i" is "k" in the function down here. And "k" becomes model->num_topics.
+ * -       \phi_{ni}^{t+1} = \beta_{iw_n} exp { \Psi(\gamma_i^t) }
+ * - until covergence
+ *
+ * The factor \beta_{iw_n} or \beta_{iv} is actually p(w_n^{v=1}|z^{i=1}), the probability of a word in 
  */
 
 double lda_inference(document* doc, lda_model* model, double* var_gamma, double** phi)
@@ -53,6 +67,7 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
             for (k = 0; k < model->num_topics; k++)
             {
                 oldphi[k] = phi[n][k];
+		// here you see only 1 digamma term, this is because the sum over all gammas becomes a constant
                 phi[n][k] =
                     digamma_gam[k] +
                     model->log_prob_w[k][doc->words[n]];
@@ -76,6 +91,7 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
 
         likelihood = compute_likelihood(doc, model, phi, var_gamma);
         assert(!isnan(likelihood));
+	// becomes 1 - new/old, so as soon as new likelihood (+margin) > old likelihood, we drop out
         converged = (likelihood_old - likelihood) / likelihood_old;
         likelihood_old = likelihood;
 
@@ -88,6 +104,8 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
 /*
  * compute likelihood bound
  *
+ * Here "k" is "j" in equation 16 in Appendix A.3.1:
+ *    \Psi(\gamma_i) - \Psi(\sum_{j=1}^k \gamma_j)
  */
 
 double
